@@ -1,0 +1,8 @@
+When You Come Back
+We will:
+1. Write the main function in train_model.py
+2. Run it and see our model performance
+3. Build schemas.py
+4. Build main.py (FastAPI)
+5. Build app.py (Streamlit)
+6. Deploy everything

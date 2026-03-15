@@ -1,0 +1,340 @@
+
+════════════════════════════════════════════════════════════════
+          FRAUD DETECTION COMPLIANCE CHECKLIST
+          International Standards for ML Fraud Detection Systems
+          Prepared by: Aamir Qadeer — AI Engineer
+          Version 1.0 — March 2026
+════════════════════════════════════════════════════════════════
+
+
+INTRODUCTION
+────────────────────────────────────────────────────────────────
+This checklist ensures AI-powered fraud detection systems meet
+international compliance standards for Canadian and global
+financial institutions. Fraud detection is classified as a
+HIGH RISK AI system under the EU AI Act and requires strict
+compliance with financial regulations.
+
+Review each section before deploying any fraud detection
+system in a production financial environment.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 1 — PCI DSS COMPLIANCE
+Payment Card Industry Data Security Standard
+Jurisdiction: International — MANDATORY for payment card data
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Cardholder data never stored in plain text
+    Raw card numbers, CVV codes, and PINs must never be
+    stored, logged, or processed by the fraud detection system.
+    Only anonymized or tokenized transaction data is acceptable.
+
+[ ] MANDATORY — Encrypted data transmission
+    All transaction data sent to the fraud detection API must
+    be encrypted using TLS 1.2 or higher. Never transmit
+    payment data over unencrypted connections.
+
+[ ] MANDATORY — Access control implemented
+    Only authorized personnel and systems may access the
+    fraud detection model and its predictions. Implement
+    role based access control with minimum necessary privileges.
+
+[ ] MANDATORY — Audit logging enabled
+    All prediction requests must be logged with timestamp,
+    result, and anonymized transaction identifier. Logs must
+    be retained for minimum 12 months per PCI DSS requirements.
+
+[ ] MANDATORY — Vulnerability management program
+    Regularly scan the fraud detection system and its
+    dependencies for known security vulnerabilities.
+    Apply security patches within 30 days of release.
+
+[ ] MANDATORY — Network security controls
+    The fraud detection API must be protected by firewall
+    rules. Restrict access to known IP ranges where possible.
+
+[ ] RECOMMENDED — Annual PCI DSS assessment completed
+    Engage a Qualified Security Assessor (QSA) annually
+    to validate PCI DSS compliance of the complete system.
+
+[ ] RECOMMENDED — Penetration testing conducted
+    Perform penetration testing on the fraud detection API
+    at least annually and after any major system changes.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 2 — FINTRAC COMPLIANCE
+Financial Transactions and Reports Analysis Centre of Canada
+Jurisdiction: Canada — MANDATORY for Canadian financial services
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Suspicious transaction reporting process
+    Define and document the process for reporting suspicious
+    transactions identified by the fraud detection system
+    to FINTRAC within required timeframes.
+
+[ ] MANDATORY — Large cash transaction reporting
+    Transactions over CAD $10,000 must be reported to
+    FINTRAC regardless of fraud detection outcome.
+
+[ ] MANDATORY — Record keeping for 5 years
+    All transaction records and fraud detection decisions
+    must be retained for minimum 5 years as required
+    by the Proceeds of Crime Act.
+
+[ ] MANDATORY — Know Your Customer (KYC) integration
+    The fraud detection system must integrate with KYC
+    processes to verify customer identity for flagged
+    transactions before blocking.
+
+[ ] MANDATORY — Employee training documented
+    All staff involved in fraud detection must complete
+    FINTRAC compliance training annually. Training records
+    must be maintained.
+
+[ ] RECOMMENDED — Automated STR generation
+    Implement automated Suspicious Transaction Report
+    generation for transactions flagged as high probability
+    fraud by the ML model.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 3 — OSFI GUIDELINES COMPLIANCE
+Office of Superintendent of Financial Institutions
+Jurisdiction: Canada — MANDATORY for federally regulated banks
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Model risk management framework documented
+    Document the complete model development lifecycle
+    including data sources, methodology, validation results,
+    and ongoing monitoring procedures.
+
+[ ] MANDATORY — Model explainability implemented
+    The fraud detection model must be able to explain why
+    a transaction was flagged as fraudulent. Feature
+    importance scores must be available for each prediction.
+
+[ ] MANDATORY — Independent model validation completed
+    The fraud detection model must be validated by a party
+    independent from the development team before deployment
+    in production.
+
+[ ] MANDATORY — Model performance monitoring active
+    Implement continuous monitoring of model performance
+    metrics. Alert when recall drops below 0.80 or AUC-ROC
+    drops below 0.95.
+
+[ ] MANDATORY — Model inventory maintained
+    Register the fraud detection model in the organizational
+    model inventory with version, owner, purpose, and
+    risk rating documented.
+
+[ ] RECOMMENDED — Bias and fairness testing completed
+    Test the model for discriminatory patterns across
+    demographic groups. Document testing methodology
+    and results.
+
+[ ] RECOMMENDED — Stress testing conducted
+    Test model performance under unusual market conditions
+    and high transaction volumes to ensure reliability.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 4 — EU AI ACT COMPLIANCE
+High Risk AI System Requirements
+Jurisdiction: European Union — Applies to EU market operations
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — High risk AI classification acknowledged
+    Fraud detection systems are explicitly classified as
+    HIGH RISK under the EU AI Act. All high risk requirements
+    must be met before deployment.
+
+[ ] MANDATORY — Technical documentation complete
+    Prepare complete technical documentation covering system
+    purpose, design, development methodology, training data,
+    performance metrics, and known limitations.
+
+[ ] MANDATORY — Human oversight mechanism implemented
+    Implement mandatory human review for high value
+    transactions flagged as fraud before blocking.
+    Fully automated blocking without human oversight
+    is not compliant for high risk decisions.
+
+[ ] MANDATORY — Transparency to affected individuals
+    Customers whose transactions are blocked due to fraud
+    detection must be informed that an automated system
+    was involved in the decision and have the right to
+    request human review.
+
+[ ] MANDATORY — Accuracy and robustness testing
+    Document testing methodology and results demonstrating
+    the system meets accuracy requirements across diverse
+    transaction types and customer segments.
+
+[ ] MANDATORY — Conformity assessment completed
+    Complete a conformity assessment before deployment
+    and register the system in the EU AI Act database
+    where required.
+
+[ ] RECOMMENDED — Post market monitoring plan
+    Implement a post market monitoring plan to track
+    system performance and report serious incidents
+    to relevant authorities.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 5 — SR 11-7 MODEL RISK MANAGEMENT
+Federal Reserve / OCC Guidance — Adopted by Canadian Banks
+Jurisdiction: USA / Canada — RECOMMENDED for banking clients
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Model purpose and limitations documented
+    Document what the model is designed to predict, what
+    it is not designed to predict, and all known limitations
+    and assumptions.
+
+[ ] MANDATORY — Model development documentation complete
+    Document data sources, data preparation steps, model
+    selection rationale, training methodology, and
+    validation results.
+
+[ ] MANDATORY — Ongoing monitoring implemented
+    Monitor model performance monthly. Document performance
+    trends and trigger retraining when performance degrades
+    below defined thresholds.
+
+[ ] RECOMMENDED — Model tiering completed
+    Assign a risk tier to the fraud detection model based
+    on materiality and complexity. Higher tier models
+    require more rigorous validation.
+
+[ ] RECOMMENDED — Challenger model maintained
+    Maintain an alternative challenger model to benchmark
+    against the production model performance.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 6 — PIPEDA / PRIVACY COMPLIANCE
+Personal Information Protection and Electronic Documents Act
+Jurisdiction: Canada — MANDATORY for all Canadian operations
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Privacy notice provided
+    Customers must be informed that their transaction data
+    is analyzed by an automated fraud detection system
+    as part of the service terms and privacy policy.
+
+[ ] MANDATORY — Data minimization practiced
+    Only collect and process transaction features necessary
+    for fraud detection. Do not include unnecessary personal
+    information in the model inputs.
+
+[ ] MANDATORY — Right to explanation honored
+    Customers whose transactions are blocked have the right
+    to a meaningful explanation of the automated decision.
+    Implement a process to provide this on request.
+
+[ ] MANDATORY — Data retention limits enforced
+    Define and enforce data retention periods for transaction
+    data used in fraud detection. Delete data when retention
+    period expires.
+
+[ ] RECOMMENDED — Privacy impact assessment completed
+    Complete a Privacy Impact Assessment before deploying
+    the fraud detection system in production.
+
+
+════════════════════════════════════════════════════════════════
+SECTION 7 — GENERAL ML ETHICS CHECKLIST
+Applicable to all fraud detection deployments
+════════════════════════════════════════════════════════════════
+
+[ ] MANDATORY — Model bias testing completed
+    Test model for discriminatory patterns based on
+    transaction location, merchant category, or any
+    proxy for protected characteristics.
+
+[ ] MANDATORY — False positive impact assessed
+    Document the customer impact of false positives
+    (legitimate transactions blocked). Define acceptable
+    false positive rate and monitor continuously.
+
+[ ] MANDATORY — Appeal process implemented
+    Customers must have a clear and accessible process
+    to appeal fraud decisions and have transactions
+    reviewed by a human agent.
+
+[ ] MANDATORY — Model limitations communicated
+    Clearly communicate to business stakeholders what
+    the model can and cannot detect. Never oversell
+    model capabilities.
+
+[ ] RECOMMENDED — Diverse training data verified
+    Verify that training data represents diverse transaction
+    types, geographies, and customer segments to avoid
+    systematic bias against specific groups.
+
+[ ] RECOMMENDED — Regular ethics review scheduled
+    Schedule quarterly ethics reviews of model performance
+    and outcomes across different customer segments.
+
+
+════════════════════════════════════════════════════════════════
+MINIMUM VIABLE COMPLIANCE FOR CANADIAN BANK CLIENTS
+Quick Start Checklist
+════════════════════════════════════════════════════════════════
+
+For rapid deployment with Canadian financial institution
+clients ensure these minimum items are completed first:
+
+[ ] 1. No real card numbers stored or processed
+[ ] 2. All API communication over HTTPS only
+[ ] 3. Audit logging of all prediction requests
+[ ] 4. Model explainability available on request
+[ ] 5. Human review process for blocked transactions
+[ ] 6. FINTRAC reporting process documented
+[ ] 7. Model performance monitoring active
+[ ] 8. Privacy notice updated to include AI fraud detection
+[ ] 9. Employee training on fraud detection system completed
+[ ] 10. Independent model validation completed
+
+
+════════════════════════════════════════════════════════════════
+COMPLIANCE SUMMARY TABLE
+════════════════════════════════════════════════════════════════
+
+Standard        Jurisdiction    Priority        When Required
+─────────────────────────────────────────────────────────────
+PCI DSS         International   MANDATORY       Payment card data
+FINTRAC         Canada          MANDATORY       All Canadian fintech
+OSFI            Canada          MANDATORY       Federally regulated banks
+EU AI Act       EU              MANDATORY       EU market operations
+SR 11-7         USA/Canada      RECOMMENDED     Banking clients
+PIPEDA          Canada          MANDATORY       All Canadian operations
+AI Ethics       Universal       MANDATORY       All deployments
+
+
+════════════════════════════════════════════════════════════════
+DISCLAIMER
+════════════════════════════════════════════════════════════════
+
+This checklist is provided as general guidance for fraud
+detection system development. It does not constitute legal
+or regulatory advice. Organizations must consult qualified
+legal, compliance, and regulatory professionals to ensure
+full compliance with all applicable laws and regulations
+in their specific jurisdiction and industry.
+
+Regulatory requirements change frequently. Always verify
+current requirements with official regulatory sources
+including FINTRAC, OSFI, and PCI Security Standards Council
+before deployment.
+
+
+════════════════════════════════════════════════════════════════
+          END OF FRAUD DETECTION COMPLIANCE CHECKLIST
+          Prepared by: Aamir Qadeer — AI Engineer
+          Version 1.0 — March 2026
+════════════════════════════════════════════════════════════════

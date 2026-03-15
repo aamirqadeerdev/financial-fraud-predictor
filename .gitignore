@@ -1,0 +1,26 @@
+
+# Conda environment
+environment.yml.bak
+
+# Data files — too large for GitHub
+data/
+*.csv
+
+# Saved model files
+model.pkl
+scaler.pkl
+
+# Secret keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code settings
+.vscode/
+
+# Windows system files
+Thumbs.db
+desktop.ini

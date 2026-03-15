@@ -1,0 +1,283 @@
+
+════════════════════════════════════════════════════════════════
+          FRAUD DETECTION DEVELOPMENT GUIDELINES
+          Professional Standards for ML Fraud Detection Systems
+          Prepared by: Aamir Qadeer — AI Engineer
+          Version 1.0 — March 2026
+════════════════════════════════════════════════════════════════
+
+
+INTRODUCTION
+────────────────────────────────────────────────────────────────
+This document defines the professional development standards
+for building real-time financial fraud detection systems using
+machine learning. These guidelines ensure the system is secure,
+accurate, explainable, and compliant with Canadian and
+international financial regulations.
+
+
+════════════════════════════════════════════════════════════════
+1. ARCHITECTURE GUIDELINES
+════════════════════════════════════════════════════════════════
+
+Separation of Concerns
+   The project must be divided into clearly separate components.
+   train_model.py handles all model training. main.py handles
+   the API layer only. schemas.py handles data validation only.
+   app.py handles the user interface only. No file should
+   perform more than one responsibility.
+
+Model Persistence
+   The trained model must be saved as a .pkl file using joblib.
+   The data scaler must also be saved separately as scaler.pkl.
+   Both files must be loaded once at API startup and reused
+   for all predictions — never retrain on every request.
+
+Real Time Performance
+   The API must return predictions in under 100 milliseconds.
+   All heavy computation such as model training must happen
+   offline in train_model.py — never during a live API request.
+
+Config Centralization
+   All settings including model path, threshold values, and
+   feature names must be defined in one central location.
+   Never hardcode values inside prediction functions.
+
+Error Handling
+   Every API endpoint must handle failures gracefully. Never
+   return raw Python error messages to API consumers. Always
+   return structured JSON error responses with clear messages.
+
+
+════════════════════════════════════════════════════════════════
+2. DATA GUIDELINES
+════════════════════════════════════════════════════════════════
+
+Dataset Selection
+   Use the industry standard Credit Card Fraud Detection
+   dataset from Kaggle. This dataset contains 284,807
+   transactions with 492 fraudulent cases — representing
+   real world class imbalance of 0.17% fraud rate.
+
+Class Imbalance Handling
+   Financial fraud datasets are highly imbalanced. Never
+   train a model on raw imbalanced data. Use SMOTE (Synthetic
+   Minority Oversampling Technique) or class_weight='balanced'
+   parameter in Scikit-learn to handle imbalance properly.
+   A model that predicts everything as legitimate will achieve
+   99.8% accuracy but zero fraud detection — this is useless.
+
+Feature Scaling
+   All numerical features must be scaled using StandardScaler
+   before training. The same scaler must be saved and used
+   for all production predictions. Never fit a new scaler
+   on production data.
+
+Data Splitting
+   Always split data into 80% training and 20% testing.
+   Use stratified splitting to maintain fraud ratio in both
+   splits. Never evaluate model performance on training data.
+
+Feature Engineering
+   The dataset contains PCA transformed features V1-V28 plus
+   Time and Amount. Always scale Amount separately as it has
+   a very different range from other features. Time can be
+   dropped or converted to hour of day for better signal.
+
+No Personal Data in Training
+   Never include personally identifiable information such as
+   names, card numbers, or account numbers in model training.
+   The model must learn patterns only — not memorize individuals.
+
+
+════════════════════════════════════════════════════════════════
+3. MODEL GUIDELINES
+════════════════════════════════════════════════════════════════
+
+Algorithm Selection
+   Random Forest is recommended for fraud detection because
+   it handles imbalanced data well, provides feature importance
+   scores for explainability, is robust to outliers, and
+   performs well without extensive hyperparameter tuning.
+   XGBoost is an excellent alternative for higher performance.
+
+Evaluation Metrics
+   Never use accuracy alone to evaluate a fraud detection model.
+   The correct metrics are Precision, Recall, F1-Score, and
+   AUC-ROC. For fraud detection Recall is most important —
+   missing a fraud (false negative) is more costly than a
+   false alarm (false positive).
+
+   Target metrics for production:
+   - Recall (Fraud): minimum 0.80
+   - Precision (Fraud): minimum 0.85
+   - AUC-ROC: minimum 0.95
+   - F1-Score: minimum 0.82
+
+Threshold Tuning
+   The default classification threshold of 0.5 is rarely
+   optimal for fraud detection. Always tune the threshold
+   based on the business cost of false negatives versus
+   false positives. A threshold of 0.3 often works better
+   for fraud detection.
+
+Model Explainability
+   Always compute and store feature importance scores.
+   Canadian banking regulations (OSFI) require that automated
+   decisions can be explained to affected customers. Feature
+   importance provides this explainability.
+
+Model Versioning
+   Always include model version, training date, and performance
+   metrics in the saved model metadata. This supports model
+   risk management requirements from OSFI and SR 11-7.
+
+Model Monitoring
+   In production, monitor model performance monthly. Fraud
+   patterns change over time — a model trained today may
+   become less effective in 6-12 months. Schedule regular
+   retraining cycles.
+
+
+════════════════════════════════════════════════════════════════
+4. API GUIDELINES
+════════════════════════════════════════════════════════════════
+
+API Design
+   Follow REST API best practices. Use POST for prediction
+   endpoints as they receive data in the request body. Use
+   proper HTTP status codes — 200 for success, 422 for
+   validation errors, 500 for server errors.
+
+Input Validation
+   All incoming transaction data must be validated using
+   Pydantic schemas before reaching the model. Reject any
+   request with missing fields, wrong data types, or values
+   outside acceptable ranges immediately.
+
+Response Structure
+   Every prediction response must include the transaction
+   details received, fraud prediction (FRAUD or LEGITIMATE),
+   fraud probability score (0.0 to 1.0), confidence level
+   (HIGH, MEDIUM, LOW), and a timestamp.
+
+Authentication
+   Production fraud detection APIs must require authentication.
+   Use API keys or JWT tokens. Never expose a fraud detection
+   API publicly without authentication as it could be used
+   to test fraudulent transactions safely.
+
+Rate Limiting
+   Implement rate limiting on the prediction endpoint to
+   prevent abuse. Fraudsters could use an unprotected API
+   to test which transactions would be flagged.
+
+Logging
+   Log all prediction requests including input features,
+   prediction result, probability score, and timestamp.
+   This audit log is required by FINTRAC and PCI DSS.
+   Never log actual card numbers or personal information.
+
+
+════════════════════════════════════════════════════════════════
+5. SECURITY GUIDELINES
+════════════════════════════════════════════════════════════════
+
+No Real Financial Data
+   Never use real customer financial data for training or
+   testing during development. Always use publicly available
+   anonymized datasets like the Kaggle credit card dataset.
+
+API Key Management
+   All API keys must be stored in .env file only. Never
+   hardcode credentials in source code. The .env file must
+   always be listed in .gitignore.
+
+Model File Security
+   The trained model.pkl file contains learned fraud patterns.
+   Treat it as sensitive intellectual property. Never expose
+   it publicly or include it in public GitHub repositories
+   for production systems. For portfolio projects it is
+   acceptable to include.
+
+HTTPS Only
+   All production fraud detection APIs must use HTTPS.
+   Never transmit financial transaction data over HTTP.
+
+Input Sanitization
+   Sanitize all inputs before processing. Validate that
+   numerical features are within expected ranges. Reject
+   obviously invalid inputs immediately.
+
+
+════════════════════════════════════════════════════════════════
+6. CONDA ENVIRONMENT GUIDELINES
+════════════════════════════════════════════════════════════════
+
+Environment Creation
+   Always create a dedicated Conda environment for each
+   project. Never install project packages in the base
+   Conda environment. Use Python 3.10 for compatibility.
+
+Environment File
+   Always maintain an environment.yml file that captures
+   all dependencies. This file allows anyone to recreate
+   the exact environment with one command:
+   conda env create -f environment.yml
+
+Package Channels
+   Use conda-forge channel for most packages as it has
+   more up to date versions than the default channel.
+   Install pip packages inside Conda environment for
+   packages not available on conda-forge.
+
+Environment Naming
+   Name environments clearly after the project:
+   fraud-detection, rag-chatbot, market-research etc.
+   Never use generic names like env or test.
+
+
+════════════════════════════════════════════════════════════════
+7. TESTING GUIDELINES
+════════════════════════════════════════════════════════════════
+
+Model Testing
+   Always test the trained model with known fraud and
+   legitimate transactions before deployment. Verify that
+   obvious fraud patterns are correctly detected.
+
+API Testing
+   Test every API endpoint with valid inputs, invalid inputs,
+   missing fields, and extreme values. Use FastAPI's built
+   in Swagger UI for interactive testing.
+
+Edge Cases to Test
+   - Transaction amount of zero
+   - Extremely large transaction amounts
+   - Missing feature values
+   - All features at maximum values
+   - Known fraud transaction patterns
+
+
+════════════════════════════════════════════════════════════════
+RECOMMENDED SETTINGS SUMMARY
+════════════════════════════════════════════════════════════════
+
+ML Model           : Random Forest Classifier
+Class Imbalance    : class_weight='balanced'
+Test Split         : 80% train, 20% test
+Scaler             : StandardScaler
+Fraud Threshold    : 0.3 (tunable)
+Min Recall Target  : 0.80
+Min AUC-ROC Target : 0.95
+API Framework      : FastAPI
+Python Version     : 3.10
+Environment        : Conda
+Deployment         : Render (free tier)
+
+
+════════════════════════════════════════════════════════════════
+          END OF FRAUD DETECTION DEVELOPMENT GUIDELINES
+          Prepared by: Aamir Qadeer — AI Engineer
+          Version 1.0 — March 2026
+════════════════════════════════════════════════════════════════
