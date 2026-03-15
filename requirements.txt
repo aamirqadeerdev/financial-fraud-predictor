@@ -1,10 +1,10 @@
 
-fastapi
-uvicorn
+streamlit
 scikit-learn
 pandas
 numpy
 joblib
-python-dotenv
-streamlit
 requests
+python-dotenv
+fastapi
+uvicorn
