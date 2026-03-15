@@ -6,9 +6,6 @@ environment.yml.bak
 data/
 *.csv
 
-# Saved model files
-model.pkl
-scaler.pkl
 
 # Secret keys
 .env
