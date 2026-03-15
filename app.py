@@ -52,6 +52,16 @@ st.markdown("""
     font-size: 28px;
     font-weight: bold;
 }
+
+.suspicious-alert {
+    background-color: #ff8c00;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,6 +93,7 @@ with st.expander("Click here to read instructions", expanded=True):
     
     **Step 4 — Read Your Results**
     A GREEN box means the transaction is LEGITIMATE and safe.
+    An ORANGE box means the transaction is SUSPICIOUS and needs review.
     A RED flashing box means FRAUD has been detected —
     take immediate action! The probability score tells you how confident
     the model is in its prediction.
@@ -288,9 +299,15 @@ if analyze_button:
         st.divider()
         st.subheader("Analysis Results")
 
+        # Show color coded alert
         if prediction == "FRAUD":
             st.markdown(
                 '<div class="fraud-alert">FRAUD DETECTED!</div>',
+                unsafe_allow_html=True
+            )
+        elif fraud_probability >= 0.1:
+            st.markdown(
+                '<div class="suspicious-alert">SUSPICIOUS TRANSACTION — REVIEW REQUIRED</div>',
                 unsafe_allow_html=True
             )
         else:
@@ -369,6 +386,28 @@ if analyze_button:
                 - Monitor account activity closely
                 - Review recent transaction history
                 """)
+
+        elif fraud_probability >= 0.1:
+            st.divider()
+            st.subheader("Suspicious Transaction Analysis")
+            st.warning("""
+            **SUSPICIOUS TRANSACTION — PRECAUTIONARY REVIEW RECOMMENDED**
+
+            This transaction shows some unusual patterns that warrant
+            closer attention before final approval:
+
+            - Transaction amount is higher than typical for this pattern
+            - Some security features show minor anomalies
+            - Does not meet threshold for fraud but requires monitoring
+
+            **Precautionary Actions:**
+            - Do not block — transaction may be legitimate
+            - Send soft verification SMS to cardholder
+            - Monitor this account for next 24 hours
+            - Flag for manual review if similar transactions follow
+            - Document in compliance log for audit purposes
+            """)
+
         else:
             st.success("""
             **TRANSACTION CLEARED**
@@ -384,3 +423,4 @@ if analyze_button:
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
+
