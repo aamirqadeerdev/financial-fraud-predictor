@@ -1,8 +1,22 @@
 
 
 import streamlit as st
-import requests
-import json
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
+# Load model and scaler directly
+@st.cache_resource
+def load_model():
+    model = joblib.load('models/model.pkl')
+    scaler = joblib.load('models/scaler.pkl')
+    return model, scaler
+
+model, scaler = load_model()
+
+# Fraud threshold
+FRAUD_THRESHOLD = 0.3
 
 st.set_page_config(
     page_title="Financial Fraud Detector",
@@ -43,7 +57,7 @@ st.markdown("""
 
 # Page header
 st.title("Financial Fraud Detector")
-st.markdown("Powered by **Random Forest ML** + **FastAPI** + **Streamlit**")
+st.markdown("Powered by **Random Forest ML** + **Scikit-learn** + **Streamlit**")
 st.markdown("Enter transaction details below to detect fraud in real time.")
 st.divider()
 
@@ -75,9 +89,6 @@ with st.expander("Click here to read instructions", expanded=True):
     """)
 
 st.divider()
-
-# API Configuration
-API_URL = "http://localhost:8000/predict"
 
 # Sample transactions
 FRAUD_SAMPLE_1 = {
@@ -246,124 +257,130 @@ with col2:
 
 # Prediction results
 if analyze_button:
-    payload = {"Amount": amount}
-    payload.update(v_values)
+    try:
+        # Build input dataframe
+        input_data = pd.DataFrame([{
+            **v_values,
+            'Amount': amount
+        }])
 
-    with st.spinner("Analyzing transaction..."):
-        try:
-            response = requests.post(
-                API_URL,
-                json=payload,
-                timeout=10
+        # Scale Amount
+        input_data['Amount'] = scaler.transform(
+            input_data[['Amount']]
+        )
+
+        # Get fraud probability
+        fraud_probability = model.predict_proba(input_data)[0][1]
+
+        # Apply threshold
+        is_fraud = fraud_probability >= FRAUD_THRESHOLD
+
+        # Confidence level
+        if fraud_probability >= 0.8:
+            confidence = "HIGH"
+        elif fraud_probability >= 0.5:
+            confidence = "MEDIUM"
+        else:
+            confidence = "LOW"
+
+        prediction = "FRAUD" if is_fraud else "LEGITIMATE"
+
+        st.divider()
+        st.subheader("Analysis Results")
+
+        if prediction == "FRAUD":
+            st.markdown(
+                '<div class="fraud-alert">FRAUD DETECTED!</div>',
+                unsafe_allow_html=True
             )
-            result = response.json()
+        else:
+            st.markdown(
+                '<div class="legitimate-alert">LEGITIMATE TRANSACTION</div>',
+                unsafe_allow_html=True
+            )
 
+        st.markdown("")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(label="Prediction", value=prediction)
+        with col2:
+            st.metric(
+                label="Fraud Probability",
+                value=f"{fraud_probability * 100:.1f}%"
+            )
+        with col3:
+            st.metric(label="Confidence", value=confidence)
+
+        st.info(f"Transaction flagged as {prediction}. Fraud probability: {fraud_probability * 100:.2f}%")
+        st.markdown(f"**Transaction Amount:** ${amount:,.2f}")
+
+        if prediction == "FRAUD":
             st.divider()
-            st.subheader("Analysis Results")
+            st.subheader("Fraud Analysis")
 
-            if result["prediction"] == "FRAUD":
-                st.markdown(
-                    '<div class="fraud-alert">FRAUD DETECTED!</div>',
-                    unsafe_allow_html=True
-                )
-            else:
-                st.markdown(
-                    '<div class="legitimate-alert">LEGITIMATE TRANSACTION</div>',
-                    unsafe_allow_html=True
-                )
+            if fraud_probability >= 0.8:
+                st.error("""
+                **HIGH RISK TRANSACTION DETECTED**
 
-            st.markdown("")
-            col1, col2, col3 = st.columns(3)
+                This transaction has been flagged as highly suspicious
+                based on the following indicators:
 
-            with col1:
-                st.metric(
-                    label="Prediction",
-                    value=result["prediction"]
-                )
-            with col2:
-                st.metric(
-                    label="Fraud Probability",
-                    value=f"{result['fraud_probability'] * 100:.1f}%"
-                )
-            with col3:
-                st.metric(
-                    label="Confidence",
-                    value=result["confidence"]
-                )
+                - Unusual transaction pattern detected
+                - Transaction features deviate significantly from normal behavior
+                - High probability of fraudulent activity
 
-            st.info(result["message"])
-            st.markdown(f"**Transaction Amount:** ${result['amount']:,.2f}")
-
-            if result["prediction"] == "FRAUD":
-                st.divider()
-                st.subheader("Fraud Analysis")
-                fraud_prob = result["fraud_probability"]
-
-                if fraud_prob >= 0.8:
-                    st.error("""
-                    **HIGH RISK TRANSACTION DETECTED**
-
-                    This transaction has been flagged as highly suspicious
-                    based on the following indicators:
-
-                    - Unusual transaction pattern detected
-                    - Transaction features deviate significantly from normal behavior
-                    - High probability of fraudulent activity
-
-                    **Recommended Actions:**
-                    - Block this transaction immediately
-                    - Contact the cardholder to verify
-                    - File a Suspicious Transaction Report (STR) with FINTRAC
-                    - Escalate to fraud investigation team
-                    """)
-                elif fraud_prob >= 0.5:
-                    st.warning("""
-                    **MEDIUM RISK TRANSACTION DETECTED**
-
-                    This transaction shows suspicious patterns that require
-                    immediate attention:
-
-                    - Transaction features show moderate anomalies
-                    - Pattern is inconsistent with typical legitimate transactions
-                    - Further verification is strongly recommended
-
-                    **Recommended Actions:**
-                    - Place transaction on hold pending review
-                    - Request additional verification from cardholder
-                    - Monitor account for further suspicious activity
-                    - Document findings for compliance records
-                    """)
-                else:
-                    st.warning("""
-                    **LOW RISK FRAUD INDICATOR**
-
-                    This transaction has been flagged but shows borderline
-                    indicators:
-
-                    - Some transaction features appear slightly unusual
-                    - May be a false positive but requires verification
-                    - Pattern warrants closer examination
-
-                    **Recommended Actions:**
-                    - Request soft verification from cardholder
-                    - Monitor account activity closely
-                    - Review recent transaction history
-                    """)
-            else:
-                st.success("""
-                **TRANSACTION CLEARED**
-
-                This transaction appears to be legitimate based on:
-
-                - Transaction pattern matches normal behavior
-                - All security features within expected ranges
-                - No suspicious indicators detected
-
-                Transaction has been approved for processing.
+                **Recommended Actions:**
+                - Block this transaction immediately
+                - Contact the cardholder to verify
+                - File a Suspicious Transaction Report (STR) with FINTRAC
+                - Escalate to fraud investigation team
                 """)
+            elif fraud_probability >= 0.5:
+                st.warning("""
+                **MEDIUM RISK TRANSACTION DETECTED**
 
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to the API server. Make sure FastAPI is running on port 8000.")
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
+                This transaction shows suspicious patterns that require
+                immediate attention:
 
+                - Transaction features show moderate anomalies
+                - Pattern is inconsistent with typical legitimate transactions
+                - Further verification is strongly recommended
+
+                **Recommended Actions:**
+                - Place transaction on hold pending review
+                - Request additional verification from cardholder
+                - Monitor account for further suspicious activity
+                - Document findings for compliance records
+                """)
+            else:
+                st.warning("""
+                **LOW RISK FRAUD INDICATOR**
+
+                This transaction has been flagged but shows borderline
+                indicators:
+
+                - Some transaction features appear slightly unusual
+                - May be a false positive but requires verification
+                - Pattern warrants closer examination
+
+                **Recommended Actions:**
+                - Request soft verification from cardholder
+                - Monitor account activity closely
+                - Review recent transaction history
+                """)
+        else:
+            st.success("""
+            **TRANSACTION CLEARED**
+
+            This transaction appears to be legitimate based on:
+
+            - Transaction pattern matches normal behavior
+            - All security features within expected ranges
+            - No suspicious indicators detected
+
+            Transaction has been approved for processing.
+            """)
+
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
