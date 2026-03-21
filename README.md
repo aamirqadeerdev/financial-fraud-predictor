@@ -5,7 +5,7 @@
 A real-time financial fraud detection system built with Machine Learning, FastAPI, and Streamlit. The system analyzes credit card transactions and predicts whether they are fraudulent or legitimate with high accuracy.
 
 ## Live Demo
-[Click here to try the app]() ← We will add this after deployment
+[Click here to try the app](https://financial-fraud-predictor-ztjqcdhqttngwmc3qra2fp.streamlit.app)
 
 ## API Documentation
 [Click here to view API docs]() ← We will add this after deployment
